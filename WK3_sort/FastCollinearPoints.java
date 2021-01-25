@@ -5,72 +5,70 @@ import edu.princeton.cs.algs4.StdDraw;
 import edu.princeton.cs.algs4.StdOut;
 
 public class FastCollinearPoints {
-  private final LineSegment[] segments;
+  private LineSegment[] segmentsList;
   private int segmentsCount = 0;
-  // private Segment curSegment = null;
-  private Point[][] lines;
 
   // finds all line segments containing 4 or more points
   public FastCollinearPoints(Point[] pointsArg) {
-    for (Point p : pointsArg) {
-      if (p == null) {
+    if (pointsArg == null) {
+      throw new IllegalArgumentException();
+    }
+
+    Point[] points = new Point[pointsArg.length];
+    Point[] sortedPoints = new Point[pointsArg.length];
+    for (int i = 0; i < pointsArg.length; i++) {
+      if (pointsArg[i] == null) {
+        throw new IllegalArgumentException();
+      }
+      points[i] = pointsArg[i];
+      sortedPoints[i] = pointsArg[i];
+    }
+
+    // If duplicate point throw illegal argument exception
+    Arrays.sort(sortedPoints);
+    for (int i = 1; i < sortedPoints.length; i++) {
+      if (sortedPoints[i].compareTo(sortedPoints[i-1]) == 0) {
         throw new IllegalArgumentException();
       }
     }
 
-    for (Point p : pointsArg) {
-      if (p == null) {
-        throw new IllegalArgumentException();
-      }
-    }
-
-    if (pointsArg.length <= 4) {
-      segments = new LineSegment[0];
+    if (pointsArg.length < 4) {
+      segmentsList = new LineSegment[0];
       return;
     }
 
-    Point[] points = Arrays.copyOf(pointsArg, pointsArg.length);
-
-    lines = new Point[points.length][2];
+    segmentsList = new LineSegment[5];
 
     for (int i = 0; i < points.length; i++) {
-      Point p = pointsArg[i];
+      Point p = sortedPoints[i];
 
-      Arrays.sort(points, p.slopeOrder());
-
-      // If duplicate point throw illegal argument exception
-      if (p.slopeTo(points[1]) == Double.NEGATIVE_INFINITY) {
-        throw new IllegalArgumentException("Duplicated points");
-      }
+      Point[] pointsBySlope = sortedPoints.clone();
+      Arrays.sort(pointsBySlope, p.slopeOrder());
 
       double prevSlope = 0.0;
       int count = 0;
-      for (int j = 1; j < points.length; j++) {
-        double slope = p.slopeTo(points[j]);
+      for (int j = 1; j < pointsBySlope.length; j++) {
+        double slope = p.slopeTo(pointsBySlope[j]);
 
         // initialize prevSlope
         if (count == 0) {
           prevSlope = slope;
-          count = 1;
-        // increment count if same group
-        } else if (slope == prevSlope) {
+        }
+
+        if (slope == prevSlope) {
           count += 1;
-          if (j == points.length - 1) {
-            computeSegment(points, count, j - count + 1, j + 1);
+          if (j == pointsBySlope.length - 1) {
+            computeSegment(pointsBySlope, count, j - count + 1, j + 1);
           }
         } else {
-          computeSegment(points, count, j-count, j);
+          computeSegment(pointsBySlope, count, j-count, j);
           prevSlope = slope;
           count = 1;
         }
       }
     }
 
-    segments = new LineSegment[segmentsCount];
-    for (int i = 0; i < segmentsCount; i++) {
-      segments[i] = new LineSegment(lines[i][0], lines[i][1]);
-    }
-    this.lines = null;
+    segmentsList = Arrays.copyOf(segmentsList, segmentsCount);
   }
 
   private void computeSegment(Point[] points, int count, int start, int end) {
@@ -79,38 +77,27 @@ public class FastCollinearPoints {
     }
 
     Point first = points[0];
-    Point last = points[0];
+    Point last = points[end-1];
 
-    for (int i = start; i < end; i++) {
-      Point p = points[i];
-      int resFirst = first.compareTo(p);
-      if (resFirst > 0) {
-        first = p;
-      }
-
-      int resLast = last.compareTo(p);
-      if (resLast < 0) {
-        last = p;
-      }
+    if (first.compareTo(points[start]) > 0) {
+      return;
     }
 
-    for (int i = 0; i < segmentsCount; i++) {
-      if (lines[i][0] == first && lines[i][1] == last) {
-        return;
-      }
+    if (segmentsList.length == segmentsCount) {
+      segmentsList = Arrays.copyOf(segmentsList, segmentsList.length * 2);
     }
-    lines[segmentsCount] = new Point[]{first, last};
+    segmentsList[segmentsCount] = new LineSegment(first, last);
     segmentsCount++;
   }
 
   // the number of line segments
   public int numberOfSegments() {
-    return segments.length;
+    return segmentsList.length;
   }
 
   // the line segments
   public LineSegment[] segments() {
-    return Arrays.copyOf(segments, segments.length);
+    return Arrays.copyOf(segmentsList, segmentsList.length);
   }
 
   public static void main(String[] args) {
