@@ -56,6 +56,10 @@ public class Board {
         }
       }
     }
+    // Account for 0 in last position
+    if (board[nSize-1][nSize-1] == 0) {
+      count -= 1;
+    }
     return count;
   }
 
@@ -192,18 +196,5 @@ public class Board {
       StdOut.println("Neighbor:");
       StdOut.println(neighbor);
     }
-
-    // // solve the puzzle
-    // Solver solver = new Solver(initial);
-
-    // // print solution to standard output
-    // if (!solver.isSolvable())
-    //   StdOut.println("No solution possible");
-    // else {
-    //   StdOut.println("Minimum number of moves = " + solver.moves());
-    //   for (Board board : solver.solution())
-    //     StdOut.println(board);
-    // }
   }
-
 }
