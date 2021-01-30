@@ -167,8 +167,29 @@ public class Board {
     }
 }
 
-  // // a board that is obtained by exchanging any pair of tiles
-  // public Board twin() {}
+  // a board that is obtained by exchanging any pair of tiles
+  public Board twin() {
+    int[][] copy = new int[nSize][nSize];
+
+    int index = 0;
+    int[] swaps = new int[4];
+
+    for (int i = 0; i < nSize; i++) {
+      for (int j = 0; j < nSize; j++) {
+        if (index < swaps.length && board[i][j] != 0) {
+          swaps[index++] = i;
+          swaps[index++] = j;
+        }
+        copy[i][j] = board[i][j];
+      }
+    }
+
+    int val = copy[swaps[0]][swaps[1]];
+    copy[swaps[0]][swaps[1]] = copy[swaps[2]][swaps[3]];
+    copy[swaps[2]][swaps[3]] = val;
+
+    return new Board(copy);
+  }
 
   // unit testing (not graded)
   public static void main(String[] args) {

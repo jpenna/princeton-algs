@@ -13,31 +13,58 @@ public class Solver {
       throw new IllegalArgumentException();
     }
 
-    MinPQ<Node> minPQ = new MinPQ<>(new NodeComparator());
+    Board twin = initial.twin();
+
+    MinPQ<Node> minPQOriginal = new MinPQ<>(new NodeComparator());
+    MinPQ<Node> minPQTwin = new MinPQ<>(new NodeComparator());
+
+    Node solutionNode = null;
+    boolean unsolvable = false;
+
     Node current = new Node(initial, null, 0);
-    while (!current.board.isGoal()) {
-      boolean foundPrev = false;
-      for (Board neighbor : current.board.neighbors()) {
-        Node node = new Node(neighbor, current, current.moves + 1);
-        // If returning to previous position, do not insert
-        if (!foundPrev && (current.previous == null || node.board.equals(current.previous.board))) {
-          foundPrev = true;
-          continue;
-        }
-        minPQ.insert(node);
+    Node currentTwin = new Node(twin, null, 0);
+
+    while (!unsolvable) {
+      current = solve(current, minPQOriginal);
+      if (current.board.isGoal()) {
+        solutionNode = current;
+        break;
       }
-      current = minPQ.delMin();
+      currentTwin = solve(currentTwin, minPQTwin);
+      if (currentTwin.board.isGoal()) {
+        unsolvable = true;
+      }
     }
 
-    solutionMoves = current.moves;
-    solution = new Board[current.moves + 1];
-    int i = current.moves;
-    do {
-      solution[i--] = current.board;
-      current = current.previous;
-    } while (current != null);
+    if (unsolvable) {
+      solutionMoves = -1;
+      solution = new Board[]{};
+    } else {
+      solutionMoves = solutionNode.moves;
+      solution = new Board[solutionNode.moves + 1];
+      int i = solutionNode.moves;
+      do {
+        solution[i--] = solutionNode.board;
+        solutionNode = solutionNode.previous;
+      } while (solutionNode != null);
+    }
 
-    minPQ = null;
+    minPQOriginal = null;
+    minPQTwin = null;
+  }
+
+  private Node solve(Node current, MinPQ<Node> minPQ) {
+    boolean foundPrev = false;
+    for (Board neighbor : current.board.neighbors()) {
+      Node node = new Node(neighbor, current, current.moves + 1);
+      // If returning to previous position, do not insert
+      if (!foundPrev && (current.previous == null || node.board.equals(current.previous.board))) {
+        foundPrev = true;
+        continue;
+      }
+      minPQ.insert(node);
+    }
+    return minPQ.delMin();
   }
 
   private class Node implements Comparable<Node> {
