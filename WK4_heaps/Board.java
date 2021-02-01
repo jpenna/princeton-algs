@@ -1,15 +1,19 @@
 import edu.princeton.cs.algs4.StdOut;
-
-import java.util.Iterator;
+import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.Stack;
 
 public class Board {
-  private int nSize;
-  private int[][] board;
-  private int[] zeroPosition;
+  private final int nSize;
+  private final int[][] board;
+  private final int zeroRow;
+  private final int zeroCol;
 
   // create a board from an n-by-n array of tiles,
   // where tiles[row][col] = tile at (row, col)
   public Board(int[][] tiles) {
+    int zr = 0;
+    int zc = 0;
+
     nSize = tiles.length;
 
     board = new int[nSize][nSize];
@@ -18,10 +22,14 @@ public class Board {
       for (int j = 0; j < nSize; j++) {
         board[i][j] = tiles[i][j];
         if (tiles[i][j] == 0) {
-          zeroPosition = new int[]{i, j};
+          zr = i;
+          zc = j;
         }
       }
     }
+
+    zeroRow = zr;
+    zeroCol = zc;
   }
 
   // string representation of this board
@@ -51,14 +59,11 @@ public class Board {
     int count = 0;
     for (int i = 0; i < nSize; i++) {
       for (int j = 0; j < nSize; j++) {
-        if ((i*nSize + j + 1) != board[i][j]) {
-          count += 1;
+        if ((i*nSize + j + 1) == board[i][j] || board[i][j] == 0) {
+          continue;
         }
+        count += 1;
       }
-    }
-    // Account for 0 in last position
-    if (board[nSize-1][nSize-1] == 0) {
-      count -= 1;
     }
     return count;
   }
@@ -70,17 +75,9 @@ public class Board {
       for (int j = 0; j < board.length; j++) {
         int val = board[i][j];
 
-        if (val != i*nSize + j + 1) {
-          int targetRow;
-          int targetCol;
-          if (val == 0) {
-            // Target last position
-            targetRow = nSize - 1;
-            targetCol = nSize - 1;
-          } else {
-            targetRow = (val - 1) / nSize;
-            targetCol = (val - 1) % nSize;
-          }
+        if (val != i*nSize + j + 1 && val != 0) {
+          int targetRow = (val - 1) / nSize;
+          int targetCol = (val - 1) % nSize;
           count += Math.abs(i - targetRow) + Math.abs(j - targetCol);
         }
       }
@@ -97,75 +94,62 @@ public class Board {
   // does this board equal y?
   // Same size and positions
   public boolean equals(Object y) {
-    if (y == null || y.getClass() != Board.class) {
+    if (y == null || y.getClass() != this.getClass()) {
       return false;
     }
-    return toString().equals(y.toString());
+
+    Board other = (Board) y;
+    if (dimension() != other.dimension()) {
+      return false;
+    }
+
+    for (int i = 0; i < board.length; i++) {
+      for (int j = 0; j < board.length; j++) {
+        if (other.board[i][j] != board[i][j]) {
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 
   // all neighboring boards
   // possible states of the board (pieces moves to 0)
   public Iterable<Board> neighbors() {
-    return new BoardIterable();
+    int[][] draftBoard = new int[nSize][nSize];
+    for (int i = 0; i < nSize; i++) {
+      for (int j = 0; j < nSize; j++) {
+        draftBoard[i][j] = board[i][j];
+      }
+    }
+
+    Stack<Board> neighborsStack = new Stack<>();
+    if (zeroRow - 1 >= 0) {
+      neighborsStack.push(createNeighbor(draftBoard, zeroRow - 1, zeroCol));
+    }
+    if (zeroCol - 1 >= 0) {
+      neighborsStack.push(createNeighbor(draftBoard, zeroRow, zeroCol - 1));
+    }
+    if (zeroRow + 1 < nSize) {
+      neighborsStack.push(createNeighbor(draftBoard, zeroRow + 1, zeroCol));
+    }
+    if (zeroCol + 1 < nSize) {
+      neighborsStack.push(createNeighbor(draftBoard, zeroRow, zeroCol + 1));
+    }
+
+    return neighborsStack;
   }
 
-  private class BoardIterable implements Iterable<Board> {
-    @Override
-    public Iterator<Board> iterator() {
-      return new BoardIterator();
-    }
+  private Board createNeighbor(int[][] draft, int targetRow, int targetCol) {
+    int val = draft[targetRow][targetCol];
+    draft[zeroRow][zeroCol] = val;
+    draft[targetRow][targetCol] = 0;
+    Board movedBoard = new Board(draft);
+    draft[zeroRow][zeroCol] = 0;
+    draft[targetRow][targetCol] = val;
+    return movedBoard;
   }
-
-  private class BoardIterator implements Iterator<Board> {
-    private int cursor = 0;
-    private Board[] neighbors = new Board[4];
-
-    BoardIterator() {
-      int count = 0;
-      int zeroRow = zeroPosition[0];
-      int zeroCol = zeroPosition[1];
-
-      int[][] draftBoard = new int[nSize][nSize];
-      for (int i = 0; i < nSize; i++) {
-        for (int j = 0; j < nSize; j++) {
-          draftBoard[i][j] = board[i][j];
-        }
-      }
-
-      if (zeroRow - 1 >= 0) {
-        neighbors[count++] = createNeighbor(draftBoard, zeroRow - 1, zeroCol);
-      }
-      if (zeroCol - 1 >= 0) {
-        neighbors[count++] = createNeighbor(draftBoard, zeroRow, zeroCol - 1);
-      }
-      if (zeroRow + 1 < nSize) {
-        neighbors[count++] = createNeighbor(draftBoard, zeroRow + 1, zeroCol);
-      }
-      if (zeroCol + 1 < nSize) {
-        neighbors[count++] = createNeighbor(draftBoard, zeroRow, zeroCol + 1);
-      }
-    }
-
-    private Board createNeighbor(int[][] draft, int targetRow, int targetCol) {
-      int val = draft[targetRow][targetCol];
-      draft[zeroPosition[0]][zeroPosition[1]] = val;
-      draft[targetRow][targetCol] = 0;
-      Board movedBoard = new Board(draft);
-      draft[zeroPosition[0]][zeroPosition[1]] = 0;
-      draft[targetRow][targetCol] = val;
-      return movedBoard;
-    }
-
-    // Checks if the next element exists
-    public boolean hasNext() {
-      return cursor < nSize && neighbors[cursor] != null;
-    }
-
-    // moves the cursor/iterator to next element
-    public Board next() {
-      return neighbors[cursor++];
-    }
-}
 
   // a board that is obtained by exchanging any pair of tiles
   public Board twin() {
@@ -202,14 +186,12 @@ public class Board {
         tiles[i][j] = in.readInt();
     Board initial = new Board(tiles);
     Board initial2 = new Board(tiles);
-    Board initial3 = new Board(new int[][]{{1,2},{3,0}});
+    Board initial3 = new Board(new int[][]{{1, 2}, {3, 0}});
 
     StdOut.println(initial);
     StdOut.println();
     StdOut.printf("Hamming: %d\n", initial.hamming());
     StdOut.printf("Manhattan: %d\n", initial.manhattan());
-    StdOut.printf("no (3): %b\n", initial.equals(3));
-    StdOut.printf("no (null): %b\n", initial.equals(null));
     StdOut.printf("yes: %b\n", initial.equals(initial2));
     StdOut.printf("no (diff): %b\n", initial.equals(initial3));
 

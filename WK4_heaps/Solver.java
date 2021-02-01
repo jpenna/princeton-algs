@@ -1,7 +1,10 @@
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import edu.princeton.cs.algs4.MinPQ;
+import edu.princeton.cs.algs4.StdOut;
+import edu.princeton.cs.algs4.In;
 
 public class Solver {
   private final Board[] solution;
@@ -11,6 +14,12 @@ public class Solver {
   public Solver(Board initial) {
     if (initial == null) {
       throw new IllegalArgumentException();
+    }
+
+    if (initial.isGoal()) {
+      solutionMoves = 0;
+      solution = new Board[]{initial};
+      return;
     }
 
     Board twin = initial.twin();
@@ -48,9 +57,6 @@ public class Solver {
         solutionNode = solutionNode.previous;
       } while (solutionNode != null);
     }
-
-    minPQOriginal = null;
-    minPQTwin = null;
   }
 
   private Node solve(Node current, MinPQ<Node> minPQ) {
@@ -58,7 +64,7 @@ public class Solver {
     for (Board neighbor : current.board.neighbors()) {
       Node node = new Node(neighbor, current, current.moves + 1);
       // If returning to previous position, do not insert
-      if (!foundPrev && (current.previous == null || node.board.equals(current.previous.board))) {
+      if (!foundPrev && (current.previous != null && node.board.equals(current.previous.board))) {
         foundPrev = true;
         continue;
       }
@@ -87,11 +93,6 @@ public class Solver {
         return 0;
       }
       return weight <= other.weight ? -1 : 1;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-      return super.equals(other);
     }
   }
 
@@ -139,6 +140,9 @@ public class Solver {
 
     @Override
     public Board next() {
+      if (!hasNext()) {
+        throw new NoSuchElementException();
+      }
       return solution[cursor++];
     }
   }
@@ -163,10 +167,8 @@ public class Solver {
     else {
       StdOut.println("Minimum number of moves = " + solver.moves());
       for (Board board : solver.solution()) {
-        StdOut.println();
         StdOut.println(board);
       }
-      StdOut.println("Minimum number of moves = " + solver.moves());
     }
   }
 
