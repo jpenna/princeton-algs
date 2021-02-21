@@ -1,11 +1,9 @@
-import edu.princeton.cs.algs4.StdIn;
 import edu.princeton.cs.algs4.StdOut;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import edu.princeton.cs.algs4.In;
@@ -68,7 +66,7 @@ public class WordNet {
       }
     }
 
-    if (rootId == null) {
+    if (rootId == null || graph.get(rootId).indegree == 0) {
       throw new IllegalArgumentException();
     }
   }
@@ -77,6 +75,8 @@ public class WordNet {
     private final int id;
     private final String synset;
     private LinkedBag<Integer> hypernyms;
+
+    private int indegree = 0;
 
     public Node(int id, String synset) {
       this.id = id;
@@ -89,6 +89,7 @@ public class WordNet {
     }
 
     private void addEdge(int hypernymId) {
+      graph.get(hypernymId).indegree++;
       hypernyms.add(hypernymId);
     }
   }
