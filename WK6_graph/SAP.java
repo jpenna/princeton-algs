@@ -70,26 +70,44 @@ public class SAP {
     queueV.enqueue(v);
     queueW.enqueue(w);
 
+    int[] selected = null;
+    int level = 0;
     while (!queueV.isEmpty() || !queueW.isEmpty()) {
-      int ancestor = runAncestorQueue(queueV, ancestralV, ancestralW);
-      if (ancestor == -1) {
-        ancestor = runAncestorQueue(queueW, ancestralW, ancestralV);
-      }
+      level++;
+      int ancestorV = runAncestorQueue(queueV, ancestralV, ancestralW);
+      int ancestorW = runAncestorQueue(queueW, ancestralW, ancestralV);
 
-      if (ancestor != -1) {
-        Integer anc = Integer.valueOf(ancestor);
-        return new int[]{
-          ancestor,
-          ancestralW.get(anc) + ancestralV.get(anc)
-        };
+      selected = buildSet(ancestorV, ancestralV, ancestralW, selected);
+      selected = buildSet(ancestorW, ancestralV, ancestralW, selected);
+
+      if (selected != null && selected[1] < level) {
+        return selected;
       }
     }
 
-    return new int[]{-1, -1};
+    return selected != null ? selected : new int[]{-1, -1};
+  }
+
+  private int[] buildSet(
+    int ancestor,
+    HashMap<Integer, Integer> ancestralOne,
+    HashMap<Integer, Integer> ancestralTwo,
+    int[] selected
+  ) {
+    if (ancestor != -1) {
+      Integer anc = Integer.valueOf(ancestor);
+      int distance = ancestralOne.get(anc) + ancestralTwo.get(anc);
+
+      if (selected == null || distance < selected[1]) {
+        return new int[]{ancestor, distance};
+      }
+    }
+
+    return selected;
   }
 
   private int[] findAncestor(Iterable<Integer> v, Iterable<Integer> w) {
-    int[] solution = new int[]{-1, -1};
+    int[] solution = {-1, -1};
     double smallestLength = Double.POSITIVE_INFINITY;
     for (int vv : v) {
       for (int ww : w) {
@@ -129,26 +147,34 @@ public class SAP {
   // do unit testing of this class
   public static void main(String[] args) {
     In in = new In(args[0]);
-    // In in = new In("/Users/jpenna/Documents/princeton-algs/WK6_graph/samples/digraph1.txt");
     Digraph G = new Digraph(in);
     SAP sap = new SAP(G);
     while (!StdIn.isEmpty()) {
       int v = StdIn.readInt();
       int w = StdIn.readInt();
-      // int v = 1;
-      // int w = 6;
-      // ArrayList<Integer> x = new ArrayList<>();
-      // x.add(3);
-      // x.add(9);
-      // x.add(7);
-      // x.add(2);
-      // ArrayList<Integer> y = new ArrayList<>();
-      // y.add(12);
-      // y.add(11);
-      // y.add(2);
       int length = sap.length(v, w);
       int ancestor = sap.ancestor(v, w);
       StdOut.printf("length = %d, ancestor = %d\n", length, ancestor);
     }
+
+    // In in = new In("/Users/jpenna/Documents/princeton-algs/WK6_graph/samples/digraph4.txt");
+    // Digraph G = new Digraph(in);
+    // SAP sap = new SAP(G);
+    // while (!StdIn.isEmpty()) {
+    //   int v = 1;
+    //   int w = 4;
+    //   ArrayList<Integer> x = new ArrayList<>();
+    //   x.add(3);
+    //   x.add(9);
+    //   x.add(7);
+    //   x.add(2);
+    //   ArrayList<Integer> y = new ArrayList<>();
+    //   y.add(12);
+    //   y.add(11);
+    //   y.add(2);
+    //   int length = sap.length(v, w);
+    //   int ancestor = sap.ancestor(v, w);
+    //   StdOut.printf("length = %d, ancestor = %d\n", length, ancestor);
+    // }
   }
 }

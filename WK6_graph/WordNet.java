@@ -21,7 +21,7 @@ Performance requirements.  Your data type should use space linear in the input s
 
 public class WordNet {
   private ArrayList<Node> graph;
-  private HashMap<String, Integer> words;
+  private final HashMap<String, Integer> words;
 
   private void checkNull(Object arg) {
     if (arg == null) {
@@ -74,7 +74,7 @@ public class WordNet {
   private class Node {
     private final int id;
     private final String synset;
-    private LinkedBag<Integer> hypernyms;
+    private final LinkedBag<Integer> hypernyms;
 
     private int indegree = 0;
 
