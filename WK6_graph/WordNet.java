@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import edu.princeton.cs.algs4.Digraph;
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.LinkedBag;
 import edu.princeton.cs.algs4.Queue;
@@ -20,8 +21,9 @@ Performance requirements.  Your data type should use space linear in the input s
 */
 
 public class WordNet {
-  private ArrayList<Node> graph;
-  private final HashMap<String, Integer> words;
+  private SAP graph;
+  private HashMap<Integer, Node> nodes;
+  private final HashMap<String, LinkedBag<Integer>> words;
 
   private void checkNull(Object arg) {
     if (arg == null) {
@@ -35,68 +37,61 @@ public class WordNet {
     checkNull(hypernyms);
 
     words = new HashMap<>();
-    graph = new ArrayList<>();
+    nodes = new HashMap<>();
     In inSynsets = new In(synsets);
     In inHypernyms = new In(hypernyms);
 
+    int countVertices = 0;
     while (!inSynsets.isEmpty()) {
+      countVertices++;
       String line = inSynsets.readLine();
       String[] cols = line.split(",");
       int id = Integer.parseInt(cols[0]);
-      graph.add(new Node(id, cols[1]));
+      nodes.put(id, new Node(id, cols[1]));
     }
 
+    Digraph digraph = new Digraph(countVertices);
 
-    Integer rootId = null;
     while (!inHypernyms.isEmpty()) {
       String line = inHypernyms.readLine();
       String[] cols = line.split(",");
       Integer id = null;
       for (String s : cols) {
         int num = Integer.parseInt(s);
+        // First column is id
         if (id == null) {
           id = num;
           continue;
         }
-        graph.get(id).addEdge(num);
-      }
-      // Find root (what if it has 0 hypernyms and 0 connected nodes?)
-      if (graph.get(id).hypernyms.size() == 0) {
-        rootId = id;
+        digraph.addEdge(id, num);
       }
     }
 
-    if (rootId == null || graph.get(rootId).indegree == 0) {
-      throw new IllegalArgumentException();
-    }
+    graph = new SAP(digraph);
   }
 
   private class Node {
-    private final int id;
     private final String synset;
     private final LinkedBag<Integer> hypernyms;
 
-    private int indegree = 0;
-
     public Node(int id, String synset) {
-      this.id = id;
       this.hypernyms = new LinkedBag<>();
       this.synset = synset;
 
       for (String word : Arrays.asList(synset.split(" "))) {
-        words.put(word, id);
+        LinkedBag<Integer> list = words.get(word);
+        if (list == null) {
+          list = new LinkedBag<>();
+        }
+        list.add(id);
+        words.put(word, list);
       }
-    }
-
-    private void addEdge(int hypernymId) {
-      graph.get(hypernymId).indegree++;
-      hypernyms.add(hypernymId);
     }
   }
 
   // returns all WordNet nouns
   public Iterable<String> nouns() {
-    ArrayList<String> nounsList = new ArrayList<>(graph.size());
+    ArrayList<String> nounsList = new ArrayList<>(words.size());
     for (String str : words.keySet()) {
       nounsList.add(str);
     }
@@ -109,63 +104,10 @@ public class WordNet {
     return words.containsKey(word);
   }
 
-  private Integer findAncestorId(Queue<Integer> queue, Set<Integer> parents, Set<Integer> otherParents) {
-    ArrayList<Integer> list = new ArrayList<>(queue.size());
-    while (!queue.isEmpty()) {
-      list.add(queue.dequeue());
-    }
-
-    for (int id : list) {
-      for (int hyperId : graph.get(id).hypernyms) {
-        if (otherParents.contains(hyperId)) {
-          return hyperId;
-        }
-        parents.add(hyperId);
-        queue.enqueue(hyperId);
-      }
-    }
-
-    return null;
-  }
-
   private int ancestor(String nounA, String nounB, boolean shouldReturnDistance) {
-    checkNull(nounA);
-    checkNull(nounB);
-
-    if (!isNoun(nounA) || !isNoun(nounB)) {
-      throw new IllegalArgumentException();
-    }
-
-    int idA = words.get(nounA);
-    int idB = words.get(nounB);
-
-    if (idA == idB) {
-      return 0;
-    }
-
-    Set<Integer> parentsA = new HashSet<>();
-    Set<Integer> parentsB = new HashSet<>();
-    Queue<Integer> queueA = new Queue<>();
-    Queue<Integer> queueB = new Queue<>();
-
-    queueA.enqueue(idA);
-    queueB.enqueue(idB);
-
-    int pathCount = 0;
-    Integer ancestor;
-    while (true) {
-      ancestor = findAncestorId(queueA, parentsA, parentsB);
-      if (ancestor != null) {
-        return shouldReturnDistance ? pathCount + 1 : ancestor;
-      }
-      pathCount++;
-
-      ancestor = findAncestorId(queueB, parentsB, parentsA);
-      if (ancestor != null) {
-        return shouldReturnDistance ? pathCount + 1 : ancestor;
-      }
-      pathCount++;
-    }
+    LinkedBag<Integer> v = words.get(nounA);
+    LinkedBag<Integer> w = words.get(nounB);
+    return shouldReturnDistance ? graph.length(v, w) : graph.ancestor(v, w);
   }
 
   // distance between nounA and nounB (defined below)
@@ -177,27 +119,30 @@ public class WordNet {
   // in a shortest ancestral path (defined below)
   public String sap(String nounA, String nounB) {
     int id = ancestor(nounA, nounB, false);
-    return graph.get(id).synset;
+    return nodes.get(id).synset;
   }
 
   // do unit testing of this class
   public static void main(String[] args) {
-    String synPath = "/Users/jpenna/Documents/princeton-algs/WK6_graph/samples/synsets100-subgraph.txt";
-    String hyperPath = "/Users/jpenna/Documents/princeton-algs/WK6_graph/samples/hypernyms100-subgraph.txt";
+    String synPath = "/Users/jpenna/Documents/princeton-algs/WK6_graph/samples/ignore/synsets.txt";
+    String hyperPath = "/Users/jpenna/Documents/princeton-algs/WK6_graph/samples/ignore/hypernyms.txt";
+    // String synPath = "/Users/jpenna/Documents/princeton-algs/WK6_graph/samples/synsets100-subgraph.txt";
+    // String hyperPath = "/Users/jpenna/Documents/princeton-algs/WK6_graph/samples/hypernyms100-subgraph.txt";
 
     WordNet wordNet = new WordNet(synPath, hyperPath);
 
-    for (String noun : wordNet.nouns()) {
-      StdOut.print(noun + " ");
-    }
+    // for (String noun : wordNet.nouns()) {
+    //   StdOut.print(noun + " ");
+    // }
 
-    StdOut.println("isNoun('change') TRUE: " + wordNet.isNoun("change"));
-    StdOut.println("isNoun('octopus') FALSE: " + wordNet.isNoun("octopus"));
+    // StdOut.println("isNoun('change') TRUE: " + wordNet.isNoun("change"));
+    // StdOut.println("isNoun('octopus') FALSE: " + wordNet.isNoun("octopus"));
 
-    StdOut.println("distance('octopus', 'chondrin') 2: " + wordNet.distance("collagen", "chondrin"));
-    StdOut.println("distance('myosin', 'fibrinogen') 6: " + wordNet.distance("myosin", "fibrinogen"));
+    // StdOut.println("distance('octopus', 'chondrin') 2: " + wordNet.distance("collagen", "chondrin"));
+    // StdOut.println("distance('myosin', 'fibrinogen') 6: " + wordNet.distance("myosin", "fibrinogen"));
+    StdOut.println("distance('jewelled_headdress', 'survey') 6: " + wordNet.distance("jewelled_headdress", "survey"));
 
-    StdOut.println("sap('octopus', 'chondrin') 'scleroprotein albuminoid': " + wordNet.sap("collagen", "chondrin"));
-    StdOut.println("sap('myosin', 'fibrinogen') protein: " + wordNet.sap("myosin", "fibrinogen"));
+    // StdOut.println("sap('octopus', 'chondrin') 'scleroprotein albuminoid': " + wordNet.sap("collagen", "chondrin"));
+    // StdOut.println("sap('myosin', 'fibrinogen') protein: " + wordNet.sap("myosin", "fibrinogen"));
   }
 }

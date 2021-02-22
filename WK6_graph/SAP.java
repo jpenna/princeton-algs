@@ -1,8 +1,11 @@
 // import java.util.ArrayList;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 import edu.princeton.cs.algs4.Digraph;
 import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.LinkedBag;
 import edu.princeton.cs.algs4.Queue;
 import edu.princeton.cs.algs4.StdIn;
 import edu.princeton.cs.algs4.StdOut;
@@ -19,7 +22,7 @@ public class SAP {
   // constructor takes a digraph (not necessarily a DAG)
   public SAP(Digraph G) {
     checkNull(G);
-    digraph = G;
+    digraph = new Digraph(G);
   }
 
   private int runAncestorQueue(
@@ -32,31 +35,36 @@ public class SAP {
     }
 
     int cur = currentQueue.dequeue();
-    int distToCur = currentAncestors.get(cur) + 1;
+    int adjDist = currentAncestors.get(cur) + 1;
 
-    for (int adj : digraph.adj(cur)) {
-      if (!currentAncestors.containsKey(adj)) {
-        currentQueue.enqueue(adj);
-        currentAncestors.put(adj, distToCur);
-      }
+    // StdOut.print("\nCurrent: " + cur + ", adj:");
 
-      if (otherAncestors.containsKey(adj)) {
-        return adj;
-      }
+    int foundAncestor = -1;
+    if (otherAncestors.containsKey(cur)) {
+      foundAncestor = cur;
     }
 
-    return -1;
+    for (int adj : digraph.adj(cur)) {
+      // StdOut.print(" " + adj);
+      if (!currentAncestors.containsKey(adj)) {
+        currentQueue.enqueue(adj);
+        currentAncestors.put(adj, adjDist);
+      }
+      // StdOut.print(", AdjDist: " + adjDist);
+    }
+
+    return foundAncestor;
   }
 
-  /** @return int[] {0: length, 1: ancestorId} */
-  private int[] findAncestor(int v, int w) {
+  /** @return int[] {0: ancestorId, 1: length} */
+  private int[] findAncestor(Integer v, Integer w) {
     checkNull(v);
     checkNull(w);
     if (v >= digraph.V() || w >= digraph.V()) {
       throw new IllegalArgumentException();
     }
 
-    if (w == v) {
+    if (w.equals(v)) {
       return new int[]{v, 0};
     }
 
@@ -70,22 +78,16 @@ public class SAP {
     queueV.enqueue(v);
     queueW.enqueue(w);
 
-    int[] selected = null;
-    int level = 0;
+    int[] selected = {-1, -1};
     while (!queueV.isEmpty() || !queueW.isEmpty()) {
-      level++;
       int ancestorV = runAncestorQueue(queueV, ancestralV, ancestralW);
       int ancestorW = runAncestorQueue(queueW, ancestralW, ancestralV);
 
       selected = buildSet(ancestorV, ancestralV, ancestralW, selected);
       selected = buildSet(ancestorW, ancestralV, ancestralW, selected);
-
-      if (selected != null && selected[1] < level) {
-        return selected;
-      }
     }
 
-    return selected != null ? selected : new int[]{-1, -1};
+    return selected;
   }
 
   private int[] buildSet(
@@ -98,7 +100,7 @@ public class SAP {
       Integer anc = Integer.valueOf(ancestor);
       int distance = ancestralOne.get(anc) + ancestralTwo.get(anc);
 
-      if (selected == null || distance < selected[1]) {
+      if (selected[0] == -1 || distance < selected[1]) {
         return new int[]{ancestor, distance};
       }
     }
@@ -109,8 +111,8 @@ public class SAP {
   private int[] findAncestor(Iterable<Integer> v, Iterable<Integer> w) {
     int[] solution = {-1, -1};
     double smallestLength = Double.POSITIVE_INFINITY;
-    for (int vv : v) {
-      for (int ww : w) {
+    for (Integer vv : v) {
+      for (Integer ww : w) {
         int[] res = findAncestor(vv, ww);
         int ancestor = res[0];
         int length = res[1];
@@ -157,24 +159,26 @@ public class SAP {
       StdOut.printf("length = %d, ancestor = %d\n", length, ancestor);
     }
 
-    // In in = new In("/Users/jpenna/Documents/princeton-algs/WK6_graph/samples/digraph4.txt");
+    // In in = new In("/Users/jpenna/Documents/princeton-algs/WK6_graph/samples/digraph6.txt");
     // Digraph G = new Digraph(in);
     // SAP sap = new SAP(G);
-    // while (!StdIn.isEmpty()) {
-    //   int v = 1;
-    //   int w = 4;
-    //   ArrayList<Integer> x = new ArrayList<>();
-    //   x.add(3);
-    //   x.add(9);
-    //   x.add(7);
-    //   x.add(2);
-    //   ArrayList<Integer> y = new ArrayList<>();
-    //   y.add(12);
-    //   y.add(11);
-    //   y.add(2);
-    //   int length = sap.length(v, w);
-    //   int ancestor = sap.ancestor(v, w);
-    //   StdOut.printf("length = %d, ancestor = %d\n", length, ancestor);
-    // }
+    // int x = 4;
+    // int y = 5;
+    // // ArrayList<Integer> x = new ArrayList<>();
+    // // x.add(1);
+    // // x.add(null);
+    // // x.add(4);
+    // // ArrayList<Integer> y = new ArrayList<>();
+    // // y.add(3);
+    // // y.add(11);
+    // int length = sap.length(x, y);
+    // int ancestor = sap.ancestor(x, y);
+    // // int ancestor = 0;
+    // StdOut.printf("\nlength = %d, ancestor = %d\n", length, ancestor);
+
+    // String synPath = "/Users/jpenna/Documents/princeton-algs/WK6_graph/samples/ignore/synsets.txt";
+    // String hyperPath = "/Users/jpenna/Documents/princeton-algs/WK6_graph/samples/ignore/hypernyms.txt";
+    // WordNet wordNet = new WordNet(synPath, hyperPath);
+    // StdOut.println("distance('jewelled_headdress', 'survey') 6: " + wordNet.distance("jewelled_headdress", "survey"));
   }
 }
