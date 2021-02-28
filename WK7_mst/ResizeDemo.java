@@ -2,7 +2,7 @@
  *  Compilation:  javac ResizeDemo.java
  *  Execution:    java ResizeDemo input.png columnsToRemove rowsToRemove
  *  Dependencies: SeamCarver.java SCUtility.java
- *                
+ *
  *
  *  Read image from file specified as command line argument. Use SeamCarver
  *  to remove number of rows and columns specified as command line arguments.
@@ -16,14 +16,18 @@ import edu.princeton.cs.algs4.Stopwatch;
 
 public class ResizeDemo {
     public static void main(String[] args) {
-        if (args.length != 3) {
-            StdOut.println("Usage:\njava ResizeDemo [image filename] [num cols to remove] [num rows to remove]");
-            return;
-        }
+        // if (args.length != 3) {
+        //     StdOut.println("Usage:\njava ResizeDemo [image filename] [num cols to remove] [num rows to remove]");
+        //     return;
+        // }
 
-        Picture inputImg = new Picture(args[0]);
-        int removeColumns = Integer.parseInt(args[1]);
-        int removeRows = Integer.parseInt(args[2]); 
+        // Picture inputImg = new Picture(args[0]);
+        // int removeColumns = Integer.parseInt(args[1]);
+        // int removeRows = Integer.parseInt(args[2]);
+
+        Picture inputImg = new Picture("/Users/jpenna/Documents/princeton-algs/WK7_mst/samples/HJocean.png");
+        int removeColumns = 200;
+        int removeRows = 250;
 
         StdOut.printf("image is %d columns by %d rows\n", inputImg.width(), inputImg.height());
         SeamCarver sc = new SeamCarver(inputImg);
@@ -47,5 +51,5 @@ public class ResizeDemo {
         inputImg.show();
         outputImg.show();
     }
-    
+
 }

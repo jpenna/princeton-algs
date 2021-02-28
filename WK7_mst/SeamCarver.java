@@ -7,6 +7,9 @@ public class SeamCarver {
   private int[] hSeam = null;
   private int[] vSeam = null;
 
+  private static final boolean VERTICAL = true;
+  private static final boolean HORIZONTAL = false;
+
   // create a seam carver object based on the given picture
   public SeamCarver(Picture picture) {
     Validation.notNull(picture);
@@ -46,7 +49,7 @@ public class SeamCarver {
     return energyCalc.calcEnergy(picture, x, y);
   }
 
-  private void getNext(int coord, boolean isVertical, double[] pathWeights, int[][] paths) {
+  private void getNext(int coord, boolean direction, double[] pathWeights, int[][] paths) {
     int lengthSkipLast = pathWeights.length - 1;
 
     // For each path, skipping edges
@@ -57,7 +60,7 @@ public class SeamCarver {
       int prev = paths[i][coord - 1];
       int selected = 0;
       for (int diff = -1; diff <= 1; diff++) {
-        double e = isVertical ? energy(prev + diff, coord) : energy(coord, prev + diff);
+        double e = direction == VERTICAL ? energy(prev + diff, coord) : energy(coord, prev + diff);
         if (smallestEnergy > e) {
           smallestEnergy = e;
           selected = prev + diff;
@@ -69,9 +72,9 @@ public class SeamCarver {
     }
   }
 
-  private int[] findSeam(boolean isVertical) {
-    int dimension = isVertical ? picture.width() : picture.height();
-    int pathSize = !isVertical ? picture.width() : picture.height();
+  private int[] findSeam(boolean direction) {
+    int dimension = direction == VERTICAL ? picture.width() : picture.height();
+    int pathSize = direction != VERTICAL ? picture.width() : picture.height();
 
     double[] pathWeights = new double[dimension];
     int[][] paths = new int[dimension][pathSize];
@@ -83,7 +86,7 @@ public class SeamCarver {
     }
 
     for (int i = 1; i < pathSize; i++)
-      getNext(i, isVertical, pathWeights, paths);
+      getNext(i, direction, pathWeights, paths);
 
     int smIndex = 1;
     for (int i = 1; i < pathWeights.length - 1; i++) { // Skip edges
@@ -107,7 +110,7 @@ public class SeamCarver {
     if (hSeam != null)
       return hSeam;
 
-    hSeam = findSeam(false);
+    hSeam = findSeam(HORIZONTAL);
 
     return hSeam;
   }
@@ -117,7 +120,7 @@ public class SeamCarver {
     if (vSeam != null)
       return vSeam;
 
-    vSeam = findSeam(true);
+    vSeam = findSeam(VERTICAL);
 
     return vSeam;
   }
@@ -131,16 +134,21 @@ public class SeamCarver {
 
     Picture newPicture = new Picture(w, h - 1);
 
-    int prev = 0;
+    int prev = seam[0];
     for (int x = 0; x < w; x++) {
+      int diff = 0;
       for (int y = 0; y < h; y++) {
-        if (y < prev - 1 || y > prev + 1) {
-          throw new IllegalArgumentException();
+        if (seam[x] == y) {
+          if (y < prev - 1 || y > prev + 1) {
+            throw new IllegalArgumentException(String.format("Seam coordinate not valid (Prev: %d, Curr: %d, Loop: %d, %d)", prev, y, x, y));
+          }
+          prev = y;
+          diff = 1;
+          continue;
         }
-        prev = y;
-        if (seam[x] == y) continue;
-        newPicture.setRGB(x, y, picture.getRGB(x, y));
+        newPicture.setRGB(x, y - diff, picture.getRGB(x, y));
       }
+      prev = seam[x];
     }
 
     picture = newPicture;
@@ -156,16 +164,21 @@ public class SeamCarver {
 
     Picture newPicture = new Picture(w - 1, h);
 
-    int prev = 0;
-    for (int x = 0; x < w; x++) {
-      for (int y = 0; y < h; y++) {
-        if (x < prev - 1 || x > prev + 1) {
-          throw new IllegalArgumentException();
+    int prev = seam[0];
+    for (int y = 0; y < h; y++) {
+      int diff = 0;
+      for (int x = 0; x < w; x++) {
+        if (seam[y] == x) {
+          if (x < prev - 1 || x > prev + 1) {
+            throw new IllegalArgumentException(String.format("Seam coordinate not valid (Prev: %d, Curr: %d, Loop: %d, %d)", prev, x, x, y));
+          }
+          prev = x;
+          diff = 1;
+          continue;
         }
-        prev = x;
-        if (seam[y] == x) continue;
-        newPicture.setRGB(x, y, picture.getRGB(x, y));
+        newPicture.setRGB(x - diff, y, picture.getRGB(x, y));
       }
+      prev = seam[y];
     }
 
     picture = newPicture;
@@ -174,7 +187,7 @@ public class SeamCarver {
 
   //  unit testing (optional)
   public static void main(String[] args) {
-    Picture pic = new Picture("/Users/jpenna/Documents/princeton-algs/WK7_mst/samples/12x10.png");
+    Picture pic = new Picture("/Users/jpenna/Documents/princeton-algs/WK7_mst/samples/10x12.png");
     SeamCarver sc = new SeamCarver(pic);
 
     // /Users/jpenna/Documents/princeton-algs/WK7_mst/samples/3x4.png
@@ -191,11 +204,11 @@ public class SeamCarver {
     }
     StdOut.println();
 
-    int[] hSeam = sc.findHorizontalSeam();
-    StdOut.print("Horizontal Seam: ");
-    for (int i : hSeam) {
-      StdOut.printf("%d, ", i);
-    }
-    StdOut.println();
+    // int[] hSeam = sc.findHorizontalSeam();
+    // StdOut.print("Horizontal Seam: ");
+    // for (int i : hSeam) {
+    //   StdOut.printf("%d, ", i);
+    // }
+    // StdOut.println();
   }
 }

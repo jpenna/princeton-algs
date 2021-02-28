@@ -13,20 +13,20 @@
  *  The asterisks denote a minimum energy vertical or horizontal seam.
  *
  *  Vertical seam: { 3 4 3 2 1 }
- *  1000.00  1000.00  1000.00  1000.00* 1000.00  1000.00  
- *  1000.00   237.35   151.02   234.09   107.89* 1000.00  
- *  1000.00   138.69   228.10   133.07*  211.51  1000.00  
- *  1000.00   153.88   174.01*  284.01   194.50  1000.00  
- *  1000.00  1000.00* 1000.00  1000.00  1000.00  1000.00  
+ *  1000.00  1000.00  1000.00  1000.00* 1000.00  1000.00
+ *  1000.00   237.35   151.02   234.09   107.89* 1000.00
+ *  1000.00   138.69   228.10   133.07*  211.51  1000.00
+ *  1000.00   153.88   174.01*  284.01   194.50  1000.00
+ *  1000.00  1000.00* 1000.00  1000.00  1000.00  1000.00
  *  Total energy = 2414.973496
- *  
- *  
+ *
+ *
  *  Horizontal seam: { 2 2 1 2 1 2 }
- *  1000.00  1000.00  1000.00  1000.00  1000.00  1000.00 
- *  1000.00   237.35   151.02*  234.09   107.89* 1000.00  
- *  1000.00*  138.69*  228.10   133.07*  211.51  1000.00*  
- *  1000.00   153.88   174.01   284.01   194.50  1000.00  
- *  1000.00  1000.00  1000.00  1000.00  1000.00  1000.00  
+ *  1000.00  1000.00  1000.00  1000.00  1000.00  1000.00
+ *  1000.00   237.35   151.02*  234.09   107.89* 1000.00
+ *  1000.00*  138.69*  228.10   133.07*  211.51  1000.00*
+ *  1000.00   153.88   174.01   284.01   194.50  1000.00
+ *  1000.00  1000.00  1000.00  1000.00  1000.00  1000.00
  *  Total energy = 2530.681960
  *
  ******************************************************************************/
@@ -53,7 +53,7 @@ public class PrintSeams {
                 StdOut.printf("%7.2f%s ", energy, marker);
             }
             StdOut.println();
-        }                
+        }
         // StdOut.println();
         StdOut.printf("Total energy = %f\n", totalSeamEnergy);
         StdOut.println();
@@ -61,15 +61,18 @@ public class PrintSeams {
     }
 
     public static void main(String[] args) {
-        Picture picture = new Picture(args[0]);
-        StdOut.printf("%s (%d-by-%d image)\n", args[0], picture.width(), picture.height());
+        String path = "/Users/jpenna/Documents/princeton-algs/WK7_mst/samples/10x12.png";
+        Picture picture = new Picture(path);
+        StdOut.printf("%s (%d-by-%d image)\n", path, picture.width(), picture.height());
+        // Picture picture = new Picture(args[0]);
+        // StdOut.printf("%s (%d-by-%d image)\n", args[0], picture.width(), picture.height());
         StdOut.println();
         StdOut.println("The table gives the dual-gradient energies of each pixel.");
         StdOut.println("The asterisks denote a minimum energy vertical or horizontal seam.");
         StdOut.println();
 
         SeamCarver carver = new SeamCarver(picture);
-        
+
         StdOut.printf("Vertical seam: { ");
         int[] verticalSeam = carver.findVerticalSeam();
         for (int x : verticalSeam)
