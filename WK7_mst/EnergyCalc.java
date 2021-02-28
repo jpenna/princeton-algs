@@ -1,7 +1,7 @@
 import edu.princeton.cs.algs4.Picture;
 
 public class EnergyCalc {
-  double[][] cache;
+  private double[][] cache;
 
   public EnergyCalc(Picture picture) {
     resetCache(picture);

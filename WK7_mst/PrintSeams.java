@@ -61,7 +61,7 @@ public class PrintSeams {
     }
 
     public static void main(String[] args) {
-        String path = "/Users/jpenna/Documents/princeton-algs/WK7_mst/samples/10x12.png";
+        String path = "/Users/jpenna/Documents/princeton-algs/WK7_mst/samples/7x10.png";
         Picture picture = new Picture(path);
         StdOut.printf("%s (%d-by-%d image)\n", path, picture.width(), picture.height());
         // Picture picture = new Picture(args[0]);

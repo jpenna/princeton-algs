@@ -1,2 +1,2 @@
 rm seam.zip
-zip wordnet ./SeamCarver.java
+zip seam ./SeamCarver.java ./EnergyCalc.java ./Validation.java

@@ -2,25 +2,17 @@ import edu.princeton.cs.algs4.Picture;
 import edu.princeton.cs.algs4.StdOut;
 
 public class SeamCarver {
-  private Picture picture;
-  private EnergyCalc energyCalc;
-  private int[] hSeam = null;
-  private int[] vSeam = null;
-
   private static final boolean VERTICAL = true;
   private static final boolean HORIZONTAL = false;
+
+  private Picture picture;
+  private final EnergyCalc energyCalc;
 
   // create a seam carver object based on the given picture
   public SeamCarver(Picture picture) {
     Validation.notNull(picture);
     this.picture = new Picture(picture);
     energyCalc = new EnergyCalc(this.picture);
-  }
-
-  private void resetCaches() {
-    energyCalc.resetCache(picture);
-    hSeam = null;
-    vSeam = null;
   }
 
   // current picture
@@ -49,7 +41,7 @@ public class SeamCarver {
     return energyCalc.calcEnergy(picture, x, y);
   }
 
-  private void getNext(int coord, boolean direction, double[] pathWeights, int[][] paths) {
+  private void calcNext(int coord, boolean direction, double[] pathWeights, int[][] paths) {
     int lengthSkipLast = pathWeights.length - 1;
 
     // For each path, skipping edges
@@ -73,8 +65,10 @@ public class SeamCarver {
   }
 
   private int[] findSeam(boolean direction) {
-    int dimension = direction == VERTICAL ? picture.width() : picture.height();
-    int pathSize = direction != VERTICAL ? picture.width() : picture.height();
+    int w = picture.width();
+    int h = picture.height();
+    int dimension = direction == VERTICAL ? w : h;
+    int pathSize = direction != VERTICAL ? w : h;
 
     double[] pathWeights = new double[dimension];
     int[][] paths = new int[dimension][pathSize];
@@ -86,7 +80,7 @@ public class SeamCarver {
     }
 
     for (int i = 1; i < pathSize; i++)
-      getNext(i, direction, pathWeights, paths);
+      calcNext(i, direction, pathWeights, paths);
 
     int smIndex = 1;
     for (int i = 1; i < pathWeights.length - 1; i++) { // Skip edges
@@ -101,28 +95,18 @@ public class SeamCarver {
       selected[selected.length - 1] = selected[selected.length - 2];
     }
 
-    // StdOut.println("Total weight: " + pathWeights[smIndex]);
+    StdOut.println("Total weight: " + pathWeights[smIndex]);
     return selected;
   }
 
   // sequence of indices for horizontal seam
   public int[] findHorizontalSeam() {
-    if (hSeam != null)
-      return hSeam;
-
-    hSeam = findSeam(HORIZONTAL);
-
-    return hSeam;
+    return findSeam(HORIZONTAL);
   }
 
   // sequence of indices for vertical seam
   public int[] findVerticalSeam() {
-    if (vSeam != null)
-      return vSeam;
-
-    vSeam = findSeam(VERTICAL);
-
-    return vSeam;
+    return findSeam(VERTICAL);
   }
 
   // remove horizontal seam from current picture
@@ -152,7 +136,7 @@ public class SeamCarver {
     }
 
     picture = newPicture;
-    resetCaches();
+    energyCalc.resetCache(picture);
   }
 
   // remove vertical seam from current picture
@@ -182,12 +166,12 @@ public class SeamCarver {
     }
 
     picture = newPicture;
-    resetCaches();
+    energyCalc.resetCache(picture);
   }
 
   //  unit testing (optional)
   public static void main(String[] args) {
-    Picture pic = new Picture("/Users/jpenna/Documents/princeton-algs/WK7_mst/samples/10x12.png");
+    Picture pic = new Picture("/Users/jpenna/Documents/princeton-algs/WK7_mst/samples/7x10.png");
     SeamCarver sc = new SeamCarver(pic);
 
     // /Users/jpenna/Documents/princeton-algs/WK7_mst/samples/3x4.png
@@ -204,11 +188,11 @@ public class SeamCarver {
     }
     StdOut.println();
 
-    // int[] hSeam = sc.findHorizontalSeam();
-    // StdOut.print("Horizontal Seam: ");
-    // for (int i : hSeam) {
-    //   StdOut.printf("%d, ", i);
-    // }
-    // StdOut.println();
+    int[] hSeam = sc.findHorizontalSeam();
+    StdOut.print("Horizontal Seam: ");
+    for (int i : hSeam) {
+      StdOut.printf("%d, ", i);
+    }
+    StdOut.println();
   }
 }

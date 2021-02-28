@@ -1,10 +1,10 @@
 import edu.princeton.cs.algs4.Picture;
 
 public class Validation {
-  private Validation() {}
+  private Validation() { }
 
-  public static void notNull(Object o) {
-    if (o == null) {
+  public static void notNull(Object obj) {
+    if (obj == null) {
       throw new IllegalArgumentException();
     }
   }
