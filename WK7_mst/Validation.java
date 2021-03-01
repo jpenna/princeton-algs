@@ -11,7 +11,7 @@ public class Validation {
 
   public static void validCoordinates(Picture picture, int x, int y) {
     if (x < 0 || y < 0 || x >= picture.width() || y >= picture.height()) {
-      throw new IllegalArgumentException();
+      throw new IllegalArgumentException(String.format("Args: %d, %d", x, y));
     }
   }
 

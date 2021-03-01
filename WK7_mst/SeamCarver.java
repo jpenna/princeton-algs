@@ -2,11 +2,15 @@ import edu.princeton.cs.algs4.Picture;
 import edu.princeton.cs.algs4.StdOut;
 
 public class SeamCarver {
-  private static final boolean VERTICAL = true;
-  private static final boolean HORIZONTAL = false;
-
   private Picture picture;
   private final EnergyCalc energyCalc;
+  private double minEnergy;
+  private int[] minPath;
+  private int[] path;
+  private int endScan;
+  private int endPath;
+  private boolean isVertical;
+  private int[] sides = new int[]{-1, 1, 0};
 
   // create a seam carver object based on the given picture
   public SeamCarver(Picture picture) {
@@ -41,72 +45,60 @@ public class SeamCarver {
     return energyCalc.calcEnergy(picture, x, y);
   }
 
-  private void calcNext(int coord, boolean direction, double[] pathWeights, int[][] paths) {
-    int lengthSkipLast = pathWeights.length - 1;
+  private void findNext(int scanVal, int pathCursor, double pathEnergy) {
+    // Do not consider paths going through edges
+    if (pathEnergy >= minEnergy) {
+      return;
+    }
+    if (pathCursor == endPath) {
+      minEnergy = pathEnergy; // minEnergy will be smaller
+      minPath = path.clone();
+      return;
+    }
+    if (pathCursor > endPath) {
+      throw new IllegalArgumentException("pathCursor should never be bigger than height/width, because it should stop earlier.");
+    }
+    for (int side : sides) {
+      int scanIndex = scanVal+side;
 
-    // For each path, skipping edges
-    for (int i = 1; i < lengthSkipLast; i++) {
-      // Select the next pixel with the smallest energy
-      double smallestEnergy = Double.POSITIVE_INFINITY;
-      // Use the previous index of the current path to bound the next index
-      int prev = paths[i][coord - 1];
-      int selected = 0;
-      for (int diff = -1; diff <= 1; diff++) {
-        double e = direction == VERTICAL ? energy(prev + diff, coord) : energy(coord, prev + diff);
-        if (smallestEnergy > e) {
-          smallestEnergy = e;
-          selected = prev + diff;
-        }
-      }
-      // Increase the path weight and pixels
-      pathWeights[i] += smallestEnergy;
-      paths[i][coord] = selected;
+      if (scanIndex >= endScan || scanIndex < 1) continue;
+
+      int x = isVertical ? scanIndex : pathCursor;
+      int y = isVertical ? pathCursor : scanIndex;
+      path[pathCursor] = scanIndex;
+
+      findNext(scanIndex, pathCursor+1, pathEnergy + energy(x, y));
     }
   }
 
-  private int[] findSeam(boolean direction) {
+  private int[] findSeam() {
     int w = picture.width();
     int h = picture.height();
-    int dimension = direction == VERTICAL ? w : h;
-    int pathSize = direction != VERTICAL ? w : h;
 
-    double[] pathWeights = new double[dimension];
-    int[][] paths = new int[dimension][pathSize];
+    endScan = isVertical ? w : h;
+    endPath = isVertical ? h : w;
 
-    // Disconsider edges
-    for (int i = 1; i < dimension - 1; i++) {
-      paths[i][0] = i;
-      pathWeights[i] = 1000; // starting edge
+    path = new int[endPath];
+    minPath = new int[endPath];
+    minEnergy = Double.POSITIVE_INFINITY;
+
+    for (int i = 2; i < endScan - 1; i += 3) {
+      findNext(i, 0, 0);
     }
 
-    for (int i = 1; i < pathSize; i++)
-      calcNext(i, direction, pathWeights, paths);
-
-    int smIndex = 1;
-    for (int i = 1; i < pathWeights.length - 1; i++) { // Skip edges
-      if (pathWeights[smIndex] > pathWeights[i]) {
-        smIndex = i;
-      }
-    }
-
-    int[] selected = paths[smIndex];
-    // Last pixel is the same as pixel before last
-    if (selected.length > 1) {
-      selected[selected.length - 1] = selected[selected.length - 2];
-    }
-
-    StdOut.println("Total weight: " + pathWeights[smIndex]);
-    return selected;
+    return minPath;
   }
 
   // sequence of indices for horizontal seam
   public int[] findHorizontalSeam() {
-    return findSeam(HORIZONTAL);
+    isVertical = false;
+    return findSeam();
   }
 
   // sequence of indices for vertical seam
   public int[] findVerticalSeam() {
-    return findSeam(VERTICAL);
+    isVertical = true;
+    return findSeam();
   }
 
   // remove horizontal seam from current picture
@@ -182,14 +174,14 @@ public class SeamCarver {
     StdOut.println("Energy 0,3: " + sc.energy(0, 3));
 
     int[] vSeam = sc.findVerticalSeam();
-    StdOut.print("Vertical Seam: ");
+    StdOut.printf("Vertical Seam (%f): ", sc.minEnergy);
     for (int i : vSeam) {
       StdOut.printf("%d, ", i);
     }
     StdOut.println();
 
     int[] hSeam = sc.findHorizontalSeam();
-    StdOut.print("Horizontal Seam: ");
+    StdOut.printf("Horizontal Seam (%f): ", sc.minEnergy);
     for (int i : hSeam) {
       StdOut.printf("%d, ", i);
     }
