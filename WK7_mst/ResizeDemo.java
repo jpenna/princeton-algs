@@ -27,7 +27,7 @@ public class ResizeDemo {
 
         Picture inputImg = new Picture("/Users/jpenna/Documents/princeton-algs/WK7_mst/samples/HJocean.png");
         int removeColumns = 200;
-        int removeRows = 0;
+        int removeRows = 100;
 
         StdOut.printf("image is %d columns by %d rows\n", inputImg.width(), inputImg.height());
         SeamCarver sc = new SeamCarver(inputImg);
