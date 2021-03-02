@@ -2,8 +2,9 @@ import edu.princeton.cs.algs4.Picture;
 import edu.princeton.cs.algs4.StdOut;
 
 public class SeamCarver {
-  private Picture picture;
   private static final double EDGE_ENERGY = 1000d;
+
+  private Picture picture;
   private int[][] pathTo;
   private double[][] energyMatrix;
   private int width = 0;
@@ -17,7 +18,7 @@ public class SeamCarver {
 
   // current picture
   public Picture picture() {
-    return picture;
+    return new Picture(picture);
   }
 
   // width of current picture
@@ -160,6 +161,8 @@ public class SeamCarver {
       index = pathTo[row][index];
     }
 
+    energyMatrix = null;
+    pathTo = null;
     return seam;
   }
 
@@ -194,6 +197,8 @@ public class SeamCarver {
       index = pathTo[index][col];
     }
 
+    energyMatrix = null;
+    pathTo = null;
     return seam;
   }
 
