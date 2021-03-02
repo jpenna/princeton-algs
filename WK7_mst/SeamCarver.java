@@ -1,6 +1,5 @@
-import edu.princeton.cs.algs4.IndexMinPQ;
-import edu.princeton.cs.algs4.MinPQ;
 import edu.princeton.cs.algs4.Picture;
+import edu.princeton.cs.algs4.Queue;
 import edu.princeton.cs.algs4.StdOut;
 
 public class SeamCarver {
