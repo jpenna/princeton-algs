@@ -5,7 +5,6 @@ public class SeamCarver {
   private static final double EDGE_ENERGY = 1000d;
 
   private Picture picture;
-  private int[][] pathTo;
   private double[][] energyMatrix;
   private int width = 0;
   private int height = 0;
@@ -83,7 +82,6 @@ public class SeamCarver {
   private void initializeData() {
     width = width();
     height = height();
-    pathTo = new int[height][width];
     energyMatrix = new double[height][width];
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
@@ -92,8 +90,7 @@ public class SeamCarver {
     }
   }
 
-  private void relaxVertical(int row, int col) {
-    double e = energy(col, row);
+  private int findSmallestVertical(int row, int col) {
     int[] cols = {col - 1, col, col + 1};
     double[] candidates = {
       cols[0] > 0 ? energyMatrix[row - 1][cols[0]] : Double.POSITIVE_INFINITY,
@@ -105,15 +102,20 @@ public class SeamCarver {
     if (candidates[1] < candidates[small]) small = 1;
     if (candidates[2] < candidates[small]) small = 2;
 
-    if (e + candidates[small] < energyMatrix[row][col]) {
-      energyMatrix[row][col] = e + candidates[small];
-      pathTo[row][col] = cols[small];
+    return cols[small];
+  }
+
+  private void relaxVertical(int row, int col) {
+    double e = energy(col, row);
+    int smallCol = findSmallestVertical(row, col);
+
+    if (e + energyMatrix[row - 1][smallCol] < energyMatrix[row][col]) {
+      energyMatrix[row][col] = e + energyMatrix[row - 1][smallCol];
     }
   }
 
-  private void relaxHorizontal(int row, int col) {
-    double e = energy(col, row);
-    int[] rows = {row - 1, row, row + 1};
+  private int findSmallestHorizontal(int row, int col) {
+    int[] rows = { row - 1, row, row + 1};
     double[] candidates = {
       rows[0] > 0 ? energyMatrix[rows[0]][col - 1] : Double.POSITIVE_INFINITY,
       energyMatrix[rows[1]][col - 1],
@@ -124,9 +126,15 @@ public class SeamCarver {
     if (candidates[1] < candidates[small]) small = 1;
     if (candidates[2] < candidates[small]) small = 2;
 
-    if (e + candidates[small] < energyMatrix[row][col]) {
-      energyMatrix[row][col] = e + candidates[small];
-      pathTo[row][col] = rows[small];
+    return rows[small];
+  }
+
+  private void relaxHorizontal(int row, int col) {
+    double e = energy(col, row);
+    int smallRow = findSmallestHorizontal(row, col);
+
+    if (e + energyMatrix[smallRow][col - 1] < energyMatrix[row][col]) {
+      energyMatrix[row][col] = e + energyMatrix[smallRow][col - 1];
     }
   }
 
@@ -158,11 +166,11 @@ public class SeamCarver {
     int[] seam = new int[height];
     for (int row = height - 1; row >= 0; row--) {
       seam[row] = index;
-      index = pathTo[row][index];
+      if (row != 0 && index != 0) {
+        index = findSmallestVertical(row, index);
+      }
     }
 
-    energyMatrix = null;
-    pathTo = null;
     return seam;
   }
 
@@ -194,11 +202,11 @@ public class SeamCarver {
     int[] seam = new int[width];
     for (int col = width - 1; col >= 0; col--) {
       seam[col] = index;
-      index = pathTo[index][col];
+      if (col != 0 && index != 0) {
+        index = findSmallestHorizontal(index, col);
+      }
     }
 
-    energyMatrix = null;
-    pathTo = null;
     return seam;
   }
 
@@ -261,7 +269,7 @@ public class SeamCarver {
 
   //  unit testing (optional)
   public static void main(String[] args) {
-    Picture pic = new Picture("/Users/jpenna/Documents/princeton-algs/WK7_mst/samples/10x12.png");
+    Picture pic = new Picture("/Users/jpenna/Documents/princeton-algs/WK7_mst/samples/8x1.png");
     SeamCarver sc = new SeamCarver(pic);
 
     // /Users/jpenna/Documents/princeton-algs/WK7_mst/samples/3x4.png
