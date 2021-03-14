@@ -1,10 +1,13 @@
 import java.util.HashSet;
 
+import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdOut;
 
 public class BoggleSolver {
   private static final int A_ENCODE = 65;
-  private Node root;
+  private static final int U_ENCODE = 85;
+  private static final int Q_LETTER = 16;
+  private final Node root;
   private int boardRows;
   private int boardCols;
 
@@ -14,20 +17,13 @@ public class BoggleSolver {
   // letters A through Z.)
   public BoggleSolver(String[] dictionary) {
     root = new Node();
+
     for (String word : dictionary) {
       if (word.length() < 3) {
         continue;
       }
-      Node current = root;
-      for (int i = 0; i < word.length(); i++) {
-        int c = word.charAt(i) - A_ENCODE;
-        if (current.edges[c] != null) {
-          current = current.edges[c];
-        } else {
-          current = current.addNode(c);
-        }
-      }
-      current.setWord(word);
+      Node node = processWord(word);
+      if (node != null) node.setWord(word);
     }
   }
 
@@ -43,6 +39,30 @@ public class BoggleSolver {
       edges[letter] = new Node();
       return edges[letter];
     }
+  }
+
+  private Node processWord(String word) {
+    Node current = root;
+    for (int i = 0; i < word.length(); i++) {
+      int c = word.charAt(i) - A_ENCODE;
+
+      if (c == Q_LETTER) {
+        // Skip 'U'
+        if (i + 1 < word.length() && word.charAt(i + 1) == U_ENCODE) {
+          i++;
+          // Do not consider words that have 'Q' that isn't 'QU'
+        } else {
+          return null;
+        }
+      }
+
+      if (current.edges[c] != null) {
+        current = current.edges[c];
+      } else {
+        current = current.addNode(c);
+      }
+    }
+    return current;
   }
 
     // Returns the set of all valid words in the given Boggle board, as an Iterable.
@@ -109,9 +129,39 @@ public class BoggleSolver {
   // Returns the score of the given word if it is in the dictionary, zero otherwise.
   // (You can assume the word contains only the uppercase letters A through Z.)
   public int scoreOf(String word) {
-    switch (word.length()) {
-      case 3:
-      case 4: return 1;
+    int length = word.length();
+
+    // Validate word
+    Node node = root;
+    for (int i = 0; i < length; i++) {
+      int c = word.charAt(i) - A_ENCODE;
+
+      // Handle Q
+      if (c == Q_LETTER) {
+        // Skip 'U'
+        if (i + 1 < length && word.charAt(i + 1) == U_ENCODE) {
+          i++;
+        // Dictionary do not consider words that have 'Q' that isn't 'QU'
+        } else {
+          return 0;
+        }
+      }
+
+      node = node.edges[c];
+      if (node == null) {
+        return 0;
+      }
+    }
+
+    if (node.word == null) {
+      return 0;
+    }
+
+    // Get points
+    if (length < 5) {
+      return 1;
+    }
+    switch (length) {
       case 5: return 2;
       case 6: return 3;
       case 7: return 5;
@@ -120,8 +170,14 @@ public class BoggleSolver {
   }
 
   public static void main(String[] args) {
+    // String dict = "/Users/jpenna/Documents/princeton-algs/WKb4_tries/samples/dictionary-algs4.txt";
+    // In in = new In(dict);
+    // String[] dictionary = in.readAllStrings();
+    // BoggleSolver solver = new BoggleSolver(dictionary);
+    // StdOut.println(solver.scoreOf("TRICE"));
+
     String dict = "/Users/jpenna/Documents/princeton-algs/WKb4_tries/samples/dictionary-yawl.txt";
-    String boardPaths[] = new String[]{
+    String[] boardPaths = new String[]{
       "/Users/jpenna/Documents/princeton-algs/WKb4_tries/samples/board-points0.txt",
       "/Users/jpenna/Documents/princeton-algs/WKb4_tries/samples/board-points1.txt",
       "/Users/jpenna/Documents/princeton-algs/WKb4_tries/samples/board-points100.txt",
@@ -146,14 +202,20 @@ public class BoggleSolver {
       "/Users/jpenna/Documents/princeton-algs/WKb4_tries/samples/board-points750.txt",
       "/Users/jpenna/Documents/princeton-algs/WKb4_tries/samples/board-points777.txt",
     };
+    // String dict = "/Users/jpenna/Documents/princeton-algs/WKb4_tries/samples/dictionary-common.txt";
+    // String[] boardPaths = new String[]{
+    //   "/Users/jpenna/Documents/princeton-algs/WKb4_tries/samples/board-random1.txt",
+    // };
     In in = new In(dict);
     String[] dictionary = in.readAllStrings();
     BoggleSolver solver = new BoggleSolver(dictionary);
 
     int[] scores = new int[boardPaths.length];
+    int[] counts = new int[boardPaths.length];
     for (int i = 0; i < boardPaths.length; i++) {
       BoggleBoard board = new BoggleBoard(boardPaths[i]);
       for (String word : solver.getAllValidWords(board)) {
+        counts[i]++;
         StdOut.print(word + ", ");
         scores[i] += solver.scoreOf(word);
       }
@@ -162,6 +224,7 @@ public class BoggleSolver {
 
     for (int i = 0; i < boardPaths.length; i++) {
       StdOut.println(boardPaths[i]);
+      StdOut.println("Count: " + counts[i]);
       StdOut.println("Score = " + scores[i]);
     }
   }
