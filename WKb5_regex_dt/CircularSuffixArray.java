@@ -3,7 +3,7 @@ import edu.princeton.cs.algs4.StdOut;
 public class CircularSuffixArray {
   private static final int R = 256; // ASCII chars
   private final char[] chars;
-  private int[] sortedIndexes;
+  private final int[] sortedIndexes;
 
   // circular suffix array of s
   public CircularSuffixArray(String s) {
@@ -27,7 +27,7 @@ public class CircularSuffixArray {
   }
 
   private void radixSort(char[] chars, int[] indexes, int start, int end, int offset) {
-    if (end - start <= 1) return;
+    if (end - start <= 1 || offset >= chars.length) return;
 
     int[] buckets = new int[R + 1];
     int[] aux = new int[end - start];
@@ -48,8 +48,6 @@ public class CircularSuffixArray {
     for (int i = 0; i < buckets.length - 1; i++) {
       if (buckets[i] > prev) {
         radixSort(chars, aux, prev, buckets[i], offset + 1);
-      } else if (buckets[i] == aux.length) {
-        break;
       }
       prev = buckets[i];
     }
@@ -67,7 +65,7 @@ public class CircularSuffixArray {
   // returns index of ith sorted suffix
   public int index(int i) {
     // Throw an IllegalArgumentException in the method index()if i is outside its prescribed range(between 0 and n−1).
-    if (i >= chars.length)
+    if (i >= chars.length || i < 0)
       throw new IllegalArgumentException("String argument is null.");
 
     return sortedIndexes[i];
@@ -77,27 +75,27 @@ public class CircularSuffixArray {
   public static void main(String[] args) {
     String str = "ABRACADABRA!";
     CircularSuffixArray circular = new CircularSuffixArray(str);
-    StdOut.println("---- " + str + " -----");
-    for (int i = 0; i < str.length(); i++) {
-      StdOut.print(", " + circular.index(i));
-    }
-    StdOut.println();
+    // StdOut.println("---- " + str + " -----");
+    // for (int i = 0; i < str.length(); i++) {
+    //   StdOut.print(", " + circular.index(i));
+    // }
+    // StdOut.println();
 
-    str = "ZABA";
+    str = "KVXRXKIKVXRXKI";
     circular = new CircularSuffixArray(str);
     StdOut.println("---- " + str + " -----");
-    StdOut.println("Length: (4): " + circular.length());
-    StdOut.println("Index 0 (1): " + circular.index(0));
-    StdOut.println("Index 1 (3): " + circular.index(1));
-    StdOut.println("Index 2 (2): " + circular.index(2));
-    StdOut.println("Index 3 (0): " + circular.index(3));
+    StdOut.println("Length: (14): " + circular.length());
+    StdOut.println("Index 10 (4): " + circular.index(10));
+    // StdOut.println("Index 1 (3): " + circular.index(1));
+    // StdOut.println("Index 2 (2): " + circular.index(2));
+    // StdOut.println("Index 3 (0): " + circular.index(3));
 
-    str = "ZAB";
-    circular = new CircularSuffixArray(str);
-    StdOut.println("---- " + str + " -----");
-    StdOut.println("Length: (3): " + circular.length());
-    StdOut.println("Index 0 (1): " + circular.index(0));
-    StdOut.println("Index 1 (2): " + circular.index(1));
-    StdOut.println("Index 2 (0): " + circular.index(2));
+    // str = "ZAB";
+    // circular = new CircularSuffixArray(str);
+    // StdOut.println("---- " + str + " -----");
+    // StdOut.println("Length: (3): " + circular.length());
+    // StdOut.println("Index 0 (1): " + circular.index(0));
+    // StdOut.println("Index 1 (2): " + circular.index(1));
+    // StdOut.println("Index 2 (0): " + circular.index(2));
   }
 }

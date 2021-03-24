@@ -4,7 +4,7 @@ import edu.princeton.cs.algs4.BinaryStdOut;
 public class MoveToFront {
     private static char[] buildAlphabet() {
         char[] alphabet = new char[256];
-        for (char i = 33; i < alphabet.length; i++) {
+        for (char i = 0; i < alphabet.length; i++) {
             alphabet[i] = i;
         }
         return alphabet;
