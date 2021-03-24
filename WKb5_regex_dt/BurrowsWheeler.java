@@ -1,8 +1,5 @@
-import java.util.ArrayList;
-
 import edu.princeton.cs.algs4.BinaryStdIn;
 import edu.princeton.cs.algs4.BinaryStdOut;
-import edu.princeton.cs.algs4.StdIn;
 
 public class BurrowsWheeler {
   private static final int R = 256;
@@ -64,8 +61,8 @@ public class BurrowsWheeler {
     BinaryStdOut.close();
   }
 
-    // if args[0] is "-", apply Burrows-Wheeler transform
-    // if args[0] is "+", apply Burrows-Wheeler inverse transform
+  // if args[0] is "-", apply Burrows-Wheeler transform
+  // if args[0] is "+", apply Burrows-Wheeler inverse transform
   public static void main(String[] args) {
     String op = args[0];
     if (op.equals("-")) {
